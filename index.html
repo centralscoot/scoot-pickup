@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pickup">
+<title>Repair Pickup</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; color: #1d1d1f; min-height: 100vh; }
+.topbar { background: #fff; border-bottom: 0.5px solid #d1d1d6; padding: 52px 20px 14px; display: flex; align-items: center; gap: 10px; }
+.topbar-badge { width: 34px; height: 34px; background: #e8f5e9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.topbar h1 { font-size: 18px; font-weight: 700; color: #1d1d1f; }
+.store-name { font-size: 12px; color: #6e6e73; margin-left: auto; }
+.wrap { max-width: 540px; margin: 0 auto; padding: 16px; }
+.screen { display: none; }
+.screen.active { display: block; }
+.card { background: #fff; border-radius: 14px; padding: 16px; margin-bottom: 12px; border: 0.5px solid #e5e5ea; }
+.field-label { font-size: 12px; font-weight: 600; color: #6e6e73; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; margin-top: 14px; }
+.field-label:first-child { margin-top: 0; }
+input[type="text"], input[type="password"] { width: 100%; background: #f5f5f7; border: 0.5px solid #d1d1d6; border-radius: 10px; padding: 12px 14px; font-size: 16px; color: #1d1d1f; outline: none; -webkit-appearance: none; appearance: none; }
+input:focus { border-color: #007aff; background: #fff; box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
+input::placeholder { color: #aeaeb2; }
+.token-row { display: flex; gap: 8px; }
+.token-row input { flex: 1; }
+.btn-save { background: #007aff; color: #fff; border: none; border-radius: 10px; padding: 12px 16px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.btn-save:active { opacity: 0.8; }
+.token-saved { display: flex; align-items: center; background: #e8f5e9; border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #2e7d32; font-weight: 500; }
+.token-saved span { margin-left: auto; font-size: 13px; color: #1565c0; cursor: pointer; }
+.tab-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.tab { padding: 11px; border-radius: 10px; border: 0.5px solid #d1d1d6; background: #f5f5f7; font-size: 14px; font-weight: 600; color: #6e6e73; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.tab.active { background: #007aff; border-color: #007aff; color: #fff; }
+.search-row { display: flex; gap: 8px; }
+.search-row input { flex: 1; }
+.btn-search { background: #007aff; color: #fff; border: none; border-radius: 10px; padding: 12px 18px; font-size: 15px; font-weight: 600; cursor: pointer; }
+.btn-search:active { opacity: 0.8; }
+.err-box { background: #fff2f2; border: 0.5px solid #ffcdd2; border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #c62828; margin-top: 10px; }
+.info-box { background: #e8f0fe; border: 0.5px solid #b5d4f4; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #1565c0; margin-top: 10px; line-height: 1.5; }
+.loading { text-align: center; padding: 30px; color: #6e6e73; font-size: 15px; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #d1d1d6; border-top-color: #007aff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.result-item { background: #fff; border-radius: 14px; border: 0.5px solid #e5e5ea; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; gap: 12px; }
+.result-item:active { background: #f5f5f7; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; background: #e8f0fe; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #1a73e8; flex-shrink: 0; }
+.result-name { font-size: 15px; font-weight: 600; color: #1d1d1f; }
+.result-sub { font-size: 13px; color: #6e6e73; margin-top: 2px; }
+.chevron { margin-left: auto; font-size: 20px; color: #c7c7cc; }
+.order-row { background: #fff; border-radius: 14px; border: 0.5px solid #e5e5ea; padding: 14px 16px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.order-row:active { background: #f5f5f7; }
+.order-name { font-size: 15px; font-weight: 600; color: #1d1d1f; }
+.order-date { font-size: 13px; color: #6e6e73; margin-top: 3px; }
+.badge { display: inline-block; padding: 4px 11px; border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.badge-finished { background: #fff3e0; color: #e65100; }
+.badge-pickedup { background: #e8f5e9; color: #2e7d32; }
+.badge-none { background: #f5f5f7; color: #6e6e73; }
+.detail-header { display: flex; align-items: center; gap: 12px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.df-label { font-size: 11px; font-weight: 700; color: #6e6e73; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+.df-val { font-size: 15px; color: #1d1d1f; font-weight: 500; }
+.divider { border: none; border-top: 0.5px solid #e5e5ea; margin: 14px 0; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.btn-pickedup { background: #e8f5e9; border: none; border-radius: 13px; padding: 16px 8px; font-size: 15px; font-weight: 700; color: #2e7d32; cursor: pointer; width: 100%; }
+.btn-pickedup:active { background: #c8e6c9; }
+.btn-finished { background: #fff3e0; border: none; border-radius: 13px; padding: 16px 8px; font-size: 15px; font-weight: 700; color: #bf360c; cursor: pointer; width: 100%; }
+.btn-finished:active { background: #ffe0b2; }
+.back-btn { display: flex; align-items: center; gap: 4px; background: none; border: none; color: #007aff; font-size: 16px; font-weight: 500; cursor: pointer; padding: 4px 0; margin-bottom: 16px; }
+.empty { text-align: center; padding: 40px 20px; color: #6e6e73; font-size: 15px; }
+.success-wrap { text-align: center; padding: 60px 20px 40px; }
+.success-circle { width: 80px; height: 80px; background: #e8f5e9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 40px; color: #2e7d32; }
+.success-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.success-sub { font-size: 15px; color: #6e6e73; margin-bottom: 32px; }
+.btn-again { background: #007aff; color: #fff; border: none; border-radius: 13px; padding: 16px 32px; font-size: 16px; font-weight: 600; cursor: pointer; }
+.btn-again:active { opacity: 0.8; }
+.debug-box { background: #f5f5f7; border: 0.5px solid #d1d1d6; border-radius: 10px; padding: 10px 12px; font-size: 11px; color: #6e6e73; margin-top: 10px; font-family: monospace; word-break: break-all; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-badge">&#x1F6F5;</div>
+  <h1>Repair pickup</h1>
+  <span class="store-name">Central Scoot</span>
+</div>
+
+<div class="wrap">
+
+  <!-- SEARCH -->
+  <div id="s-search" class="screen active">
+    <div class="card">
+      <div class="field-label">Admin API token</div>
+      <div id="token-input-wrap">
+        <div class="token-row">
+          <input type="password" id="cfg-token" placeholder="shpat_ or atkn_..." />
+          <button class="btn-save" onclick="saveToken()">Save</button>
+        </div>
+        <div class="info-box" style="margin-top:10px;">Enter your token from Dev Dashboard &#8594; Settings &#8594; App automation token</div>
+      </div>
+      <div id="token-saved-wrap" style="display:none;">
+        <div class="token-saved">&#10003; Token saved <span onclick="clearToken()">Change</span></div>
+      </div>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab active" id="tab-name" onclick="switchTab('name')">Last name</button>
+      <button class="tab" id="tab-order" onclick="switchTab('order')">Order number</button>
+    </div>
+
+    <div id="input-name">
+      <div class="search-row">
+        <input type="text" id="val-name" placeholder="Customer last name" autocorrect="off" autocapitalize="words" onkeydown="if(event.key==='Enter')doSearch()" />
+        <button class="btn-search" onclick="doSearch()">Search</button>
+      </div>
+    </div>
+    <div id="input-order" style="display:none;">
+      <div class="search-row">
+        <input type="text" id="val-order" placeholder="e.g. 1042" autocorrect="off" onkeydown="if(event.key==='Enter')doSearch()" />
+        <button class="btn-search" onclick="doSearch()">Search</button>
+      </div>
+    </div>
+
+    <div id="search-err"></div>
+    <div id="search-res" style="margin-top:14px;"></div>
+  </div>
+
+  <!-- ORDERS -->
+  <div id="s-orders" class="screen">
+    <button class="back-btn" onclick="show('s-search')">&#8249; New search</button>
+    <div id="orders-hdr" style="font-size:17px;font-weight:700;margin-bottom:14px;"></div>
+    <div id="orders-list"></div>
+  </div>
+
+  <!-- DETAIL -->
+  <div id="s-detail" class="screen">
+    <button class="back-btn" onclick="show('s-orders')">&#8249; Back</button>
+    <div class="card" id="detail-card"></div>
+    <div class="actions">
+      <button class="btn-pickedup" onclick="updateMeta('Picked Up')">&#10003; Mark picked up</button>
+      <button class="btn-finished" onclick="updateMeta('Finished')">&#128295; Mark finished</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="s-success" class="screen">
+    <div class="success-wrap">
+      <div class="success-circle">&#10003;</div>
+      <p class="success-title" id="suc-title">Updated!</p>
+      <p class="success-sub" id="suc-sub"></p>
+      <button class="btn-again" onclick="reset()">Search another customer</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+var SHOP = 'bostonproscooter.myshopify.com';
+var NS = 'custom';
+var KEY = 'repair_status';
+var TK = 'cs_api_token';
+
+var mode = 'name';
+var selCustomer = null;
+var selOrder = null;
+
+function getToken() { return localStorage.getItem(TK) || ''; }
+
+function saveToken() {
+  var v = document.getElementById('cfg-token').value.trim();
+  if (!v) { alert('Please enter a token.'); return; }
+  localStorage.setItem(TK, v);
+  document.getElementById('token-input-wrap').style.display = 'none';
+  document.getElementById('token-saved-wrap').style.display = '';
+}
+
+function clearToken() {
+  localStorage.removeItem(TK);
+  document.getElementById('cfg-token').value = '';
+  document.getElementById('token-input-wrap').style.display = '';
+  document.getElementById('token-saved-wrap').style.display = 'none';
+}
+
+window.onload = function() {
+  if (getToken()) {
+    document.getElementById('token-input-wrap').style.display = 'none';
+    document.getElementById('token-saved-wrap').style.display = '';
+  }
+};
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function switchTab(t) {
+  mode = t;
+  document.getElementById('tab-name').classList.toggle('active', t === 'name');
+  document.getElementById('tab-order').classList.toggle('active', t === 'order');
+  document.getElementById('input-name').style.display = t === 'name' ? '' : 'none';
+  document.getElementById('input-order').style.display = t === 'order' ? '' : 'none';
+  document.getElementById('search-err').innerHTML = '';
+  document.getElementById('search-res').innerHTML = '';
+}
+
+function badge(val) {
+  if (!val) return '<span class="badge badge-none">No status</span>';
+  var v = val.toLowerCase().replace(/\s/g, '');
+  if (v === 'pickedup') return '<span class="badge badge-pickedup">' + val + '</span>';
+  if (v === 'finished') return '<span class="badge badge-finished">' + val + '</span>';
+  return '<span class="badge badge-none">' + val + '</span>';
+}
+
+function initials(f, l) { return ((f||'').charAt(0) + (l||'').charAt(0)).toUpperCase() || '?'; }
+function fmtDate(d) { return new Date(d).toLocaleDateString('en-US', {month:'short',day:'numeric',year:'numeric'}); }
+
+function gql(query, variables) {
+  var token = getToken();
+  var headers = { 'Content-Type': 'application/json' };
+  if (token.indexOf('atkn_') === 0) {
+    headers['Authorization'] = 'Bearer ' + token;
+  } else {
+    headers['X-Shopify-Access-Token'] = token;
+  }
+  return fetch('https://' + SHOP + '/admin/api/2024-01/graphql.json', {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({ query: query, variables: variables || {} })
+  }).then(function(res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  }).then(function(data) {
+    if (data.errors && data.errors.length) throw new Error(data.errors[0].message);
+    return data.data;
+  });
+}
+
+function rest(path, method, body) {
+  var token = getToken();
+  var headers = { 'Content-Type': 'application/json' };
+  if (token.indexOf('atkn_') === 0) {
+    headers['Authorization'] = 'Bearer ' + token;
+  } else {
+    headers['X-Shopify-Access-Token'] = token;
+  }
+  var opts = { method: method || 'GET', headers: headers };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch('https://' + SHOP + '/admin/api/2024-01' + path, opts).then(function(res) {
+    if (!res.ok) return res.text().then(function(t) { throw new Error('HTTP ' + res.status + ': ' + t); });
+    return res.json();
+  });
+}
+
+function doSearch() {
+  var errEl = document.getElementById('search-err');
+  var resEl = document.getElementById('search-res');
+  errEl.innerHTML = ''; resEl.innerHTML = '';
+  if (!getToken()) { errEl.innerHTML = '<div class="err-box">Please enter and save your API token first.</div>'; return; }
+
+  if (mode === 'name') {
+    var val = document.getElementById('val-name').value.trim();
+    if (!val) { errEl.innerHTML = '<div class="err-box">Please enter a last name.</div>'; return; }
+    resEl.innerHTML = '<div class="loading"><span class="spinner"></span> Searching...</div>';
+
+    var query = 'query searchCustomers($q: String!) { customers(first: 10, query: $q) { edges { node { id firstName lastName email phone } } } }';
+    gql(query, { q: 'last_name:' + val })
+      .then(function(data) {
+        var customers = (data.customers.edges || []).map(function(e) { return e.node; });
+        resEl.innerHTML = '';
+        if (!customers.length) { resEl.innerHTML = '<div class="empty">No customers found for that last name.</div>'; return; }
+        customers.forEach(function(c) {
+          var d = document.createElement('div');
+          d.className = 'result-item';
+          d.innerHTML = '<div class="avatar">' + initials(c.firstName, c.lastName) + '</div><div><div class="result-name">' + (c.firstName||'') + ' ' + (c.lastName||'') + '</div><div class="result-sub">' + (c.email||c.phone||'No contact info') + '</div></div><div class="chevron">&#8250;</div>';
+          d.onclick = function() { loadOrders(c); };
+          resEl.appendChild(d);
+        });
+      })
+      .catch(function(e) {
+        resEl.innerHTML = '';
+        errEl.innerHTML = '<div class="err-box">Search failed: ' + e.message + '</div><div class="debug-box">Token type: ' + getToken().substring(0,8) + '... | Shop: ' + SHOP + '</div>';
+      });
+
+  } else {
+    var oval = document.getElementById('val-order').value.trim().replace('#','');
+    if (!oval) { errEl.innerHTML = '<div class="err-box">Please enter an order number.</div>'; return; }
+    resEl.innerHTML = '<div class="loading"><span class="spinner"></span> Looking up order...</div>';
+
+    var oquery = 'query getOrder($q: String!) { orders(first: 1, query: $q) { edges { node { id name createdAt customer { id firstName lastName email } metafields(first: 10, namespace: "' + NS + '") { edges { node { namespace key value } } } } } } }';
+    gql(oquery, { q: 'name:#' + oval })
+      .then(function(data) {
+        var orders = (data.orders.edges || []).map(function(e) { return e.node; });
+        resEl.innerHTML = '';
+        if (!orders.length) { resEl.innerHTML = '<div class="empty">No order found with that number.</div>'; return; }
+        var order = orders[0];
+        selCustomer = order.customer || {};
+        var mf = (order.metafields.edges || []).map(function(e){ return e.node; }).find(function(m){ return m.namespace===NS && m.key===KEY; });
+        order._status = mf ? mf.value : null;
+        showDetail(order);
+      })
+      .catch(function(e) {
+        resEl.innerHTML = '';
+        errEl.innerHTML = '<div class="err-box">Lookup failed: ' + e.message + '</div><div class="debug-box">Token type: ' + getToken().substring(0,8) + '... | Shop: ' + SHOP + '</div>';
+      });
+  }
+}
+
+function loadOrders(customer) {
+  selCustomer = customer;
+  show('s-orders');
+  var custName = (customer.firstName||'') + ' ' + (customer.lastName||'');
+  document.getElementById('orders-hdr').textContent = custName;
+  var listEl = document.getElementById('orders-list');
+  listEl.innerHTML = '<div class="loading"><span class="spinner"></span> Loading orders...</div>';
+
+  var custId = customer.id;
+  var query = 'query getOrders($q: String!) { orders(first: 5, query: $q, sortKey: CREATED_AT, reverse: true) { edges { node { id name createdAt metafields(first: 10, namespace: "' + NS + '") { edges { node { namespace key value } } } } } } }';
+  gql(query, { q: 'customer_id:' + custId.replace('gid://shopify/Customer/', '') })
+    .then(function(data) {
+      var orders = (data.orders.edges || []).map(function(e) { return e.node; });
+      listEl.innerHTML = '';
+      if (!orders.length) { listEl.innerHTML = '<div class="empty">No orders found.</div>'; return; }
+      orders.forEach(function(order) {
+        var mf = (order.metafields.edges || []).map(function(e){ return e.node; }).find(function(m){ return m.namespace===NS && m.key===KEY; });
+        var statusVal = mf ? mf.value : null;
+        var d = document.createElement('div');
+        d.className = 'order-row';
+        d.innerHTML = '<div><div class="order-name">' + order.name + '</div><div class="order-date">' + fmtDate(order.createdAt) + '</div></div>' + badge(statusVal);
+        d.onclick = function() { order._status = statusVal; showDetail(order); };
+        listEl.appendChild(d);
+      });
+    })
+    .catch(function(e) {
+      listEl.innerHTML = '<div class="err-box">Failed to load orders: ' + e.message + '</div>';
+    });
+}
+
+function showDetail(order) {
+  selOrder = order;
+  var cust = selCustomer || {};
+  document.getElementById('detail-card').innerHTML =
+    '<div class="detail-header"><div class="avatar" style="width:48px;height:48px;font-size:17px;">' + initials(cust.firstName||cust.first_name, cust.lastName||cust.last_name) + '</div>' +
+    '<div><div style="font-size:17px;font-weight:700;">' + (cust.firstName||cust.first_name||'') + ' ' + (cust.lastName||cust.last_name||'') + '</div>' +
+    '<div style="font-size:14px;color:#6e6e73;">' + order.name + '</div></div></div>' +
+    '<div class="divider"></div>' +
+    '<div class="detail-grid">' +
+      '<div><div class="df-label">Order number</div><div class="df-val">' + order.name + '</div></div>' +
+      '<div><div class="df-label">Order date</div><div class="df-val">' + fmtDate(order.createdAt||order.created_at) + '</div></div>' +
+      '<div><div class="df-label">Repair status</div><div class="df-val">' + badge(order._status) + '</div></div>' +
+      '<div><div class="df-label">Customer</div><div class="df-val">' + (cust.firstName||cust.first_name||'') + ' ' + (cust.lastName||cust.last_name||'') + '</div></div>' +
+    '</div>';
+  show('s-detail');
+}
+
+function updateMeta(newVal) {
+  if (!selOrder) return;
+  var orderId = selOrder.id;
+  if (!orderId.includes('gid://')) {
+    orderId = 'gid://shopify/Order/' + orderId;
+  }
+  var mutation = 'mutation setMeta($input: MetafieldsSetInput!) { metafieldsSet(metafields: [$input]) { metafields { key value } userErrors { field message } } }';
+  gql(mutation, {
+    input: { ownerId: orderId, namespace: NS, key: KEY, value: newVal, type: 'single_line_text_field' }
+  })
+  .then(function(data) {
+    var errs = data.metafieldsSet.userErrors || [];
+    if (errs.length) throw new Error(errs[0].message);
+    var cust = selCustomer || {};
+    document.getElementById('suc-title').textContent = 'Marked as "' + newVal + '"';
+    document.getElementById('suc-sub').textContent = (cust.firstName||cust.first_name||'') + ' ' + (cust.lastName||cust.last_name||'') + ' \u00B7 ' + selOrder.name;
+    show('s-success');
+  })
+  .catch(function(e) {
+    alert('Update failed: ' + e.message);
+  });
+}
+
+function reset() {
+  selCustomer = null; selOrder = null;
+  document.getElementById('val-name').value = '';
+  document.getElementById('val-order').value = '';
+  document.getElementById('search-err').innerHTML = '';
+  document.getElementById('search-res').innerHTML = '';
+  show('s-search');
+}
+</script>
+</body>
+</html>
